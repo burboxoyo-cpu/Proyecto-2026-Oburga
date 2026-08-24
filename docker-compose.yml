@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: habitos_mvc_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=super_secret_jwt_key_change_in_production_2026
+      - DB_PATH=/app/data/habits_tasks.db
+    volumes:
+      - sqlite_data:/app/data
+
+volumes:
+  sqlite_data:
+    driver: local

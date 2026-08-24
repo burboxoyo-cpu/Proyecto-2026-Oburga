@@ -1,0 +1,302 @@
+<!-- ========================================== -->
+<!-- MODAL: CREAR / EDITAR HÁBITO               -->
+<!-- ========================================== -->
+<div id="habitModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 flex flex-col max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+          <i data-lucide="flame" class="w-4 h-4"></i>
+        </div>
+        <h3 id="habitModalTitle" class="text-base font-bold text-white">Nuevo Hábito</h3>
+      </div>
+      <button onclick="closeModal('habitModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <form id="habitForm" onsubmit="submitHabitForm(event)" class="space-y-4 pt-4 overflow-y-auto flex-1 custom-scrollbar pr-1">
+      <input type="hidden" id="habitId" name="id">
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Título del Hábito *</label>
+        <input type="text" id="habitTitle" name="title" required placeholder="Ej. Ejercicio matutino, Meditación, Lectura..."
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Descripción (Opcional)</label>
+        <textarea id="habitDescription" name="description" rows="2" placeholder="Detalles, motivación o reglas del hábito..."
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Categoría</label>
+          <select id="habitCategory" name="categoryId"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="">Sin Categoría</option>
+            <% if (typeof categories !== 'undefined') { %>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>"><%= cat.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Frecuencia</label>
+          <select id="habitFrequency" name="frequency"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="daily">Todos los días</option>
+            <option value="weekdays">Días laborables (Lun-Vie)</option>
+            <option value="weekends">Fines de semana (Sáb-Dom)</option>
+            <option value="weekly">Semanal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Color Distintivo</label>
+          <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5">
+            <input type="color" id="habitColor" name="color" value="#10b981" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0">
+            <span id="habitColorHex" class="text-xs text-slate-300 font-mono">#10b981</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Meta diaria (veces)</label>
+          <input type="number" id="habitTargetDays" name="targetDays" value="1" min="1" max="100"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+
+      <!-- CHECKLIST DE PEQUEÑOS OBJETIVOS (MICRO-GOALS) -->
+      <div class="pt-2 border-t border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
+            <span>Micro-Objetivos del Hábito (Checklist)</span>
+          </label>
+          <span class="text-[11px] text-slate-400">Desglosa en pasos</span>
+        </div>
+
+        <div class="flex gap-2 mb-2.5">
+          <input type="text" id="habitNewCheckitemInput" placeholder="Añadir paso (ej. 5m estirar)..."
+            class="flex-1 bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+          <button type="button" onclick="addMicroGoalToForm('habit')"
+            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition-all">
+            + Agregar
+          </button>
+        </div>
+
+        <ul id="habitChecklistContainer" class="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
+          <!-- Items dinámicos se insertan aquí -->
+        </ul>
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeModal('habitModal')"
+          class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button type="submit" id="habitSubmitBtn"
+          class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-1.5">
+          <i data-lucide="save" class="w-3.5 h-3.5"></i>
+          <span>Guardar Hábito</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: CREAR / EDITAR TAREA                -->
+<!-- ========================================== -->
+<div id="taskModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 flex flex-col max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+          <i data-lucide="check-square" class="w-4 h-4"></i>
+        </div>
+        <h3 id="taskModalTitle" class="text-base font-bold text-white">Nueva Tarea</h3>
+      </div>
+      <button onclick="closeModal('taskModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <form id="taskForm" onsubmit="submitTaskForm(event)" class="space-y-4 pt-4 overflow-y-auto flex-1 custom-scrollbar pr-1">
+      <input type="hidden" id="taskId" name="id">
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Título de la Tarea *</label>
+        <input type="text" id="taskTitle" name="title" required placeholder="Ej. Preparar presentación del proyecto..."
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Descripción (Opcional)</label>
+        <textarea id="taskDescription" name="description" rows="2" placeholder="Detalles de la tarea, enlaces o notas clave..."
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Prioridad</label>
+          <select id="taskPriority" name="priority"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="high">🔴 Alta</option>
+            <option value="medium" selected>🟡 Media</option>
+            <option value="low">🟢 Baja</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Categoría</label>
+          <select id="taskCategory" name="categoryId"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="">Sin Categoría</option>
+            <% if (typeof categories !== 'undefined') { %>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>"><%= cat.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Estado</label>
+          <select id="taskStatus" name="status"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="pending">⏳ Pendiente</option>
+            <option value="in_progress">⚡ En Progreso</option>
+            <option value="completed">✅ Completada</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Fecha Límite</label>
+        <input type="date" id="taskDueDate" name="dueDate"
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+      </div>
+
+      <!-- CHECKLIST DE MICRO-OBJETIVOS ANIDADOS -->
+      <div class="pt-2 border-t border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-semibold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
+            <span>Micro-Objetivos / Sub-tareas (Checklist)</span>
+          </label>
+          <span class="text-[11px] text-slate-400">Progreso automático</span>
+        </div>
+
+        <div class="flex gap-2 mb-2.5">
+          <input type="text" id="taskNewCheckitemInput" placeholder="Añadir micro-objetivo..."
+            class="flex-1 bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          <button type="button" onclick="addMicroGoalToForm('task')"
+            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-all">
+            + Agregar
+          </button>
+        </div>
+
+        <ul id="taskChecklistContainer" class="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
+          <!-- Items dinámicos se insertan aquí -->
+        </ul>
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeModal('taskModal')"
+          class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button type="submit" id="taskSubmitBtn"
+          class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+          <i data-lucide="save" class="w-3.5 h-3.5"></i>
+          <span>Guardar Tarea</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: GESTIÓN RÁPIDA DE CHECKLIST / MICRO-OBJETIVOS -->
+<!-- ========================================== -->
+<div id="quickChecklistModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 flex flex-col max-h-[90vh]">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
+          <i data-lucide="list-checks" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h3 id="quickChecklistTitle" class="text-sm font-bold text-white truncate max-w-[240px]">Micro-Objetivos</h3>
+          <p id="quickChecklistSubtitle" class="text-[11px] text-slate-400">Checklist interactivo</p>
+        </div>
+      </div>
+      <button onclick="closeModal('quickChecklistModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Barra de Progreso en Vivo -->
+    <div class="py-3 border-b border-slate-800">
+      <div class="flex items-center justify-between text-xs mb-1.5">
+        <span class="text-slate-400 font-medium">Progreso completado</span>
+        <span id="quickChecklistProgressText" class="font-bold text-indigo-400">0%</span>
+      </div>
+      <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div id="quickChecklistProgressBar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Lista de Items con edición en vivo -->
+    <div class="py-3 flex-1 overflow-y-auto custom-scrollbar">
+      <ul id="quickChecklistItemsList" class="space-y-2">
+        <!-- Generados dinámicamente con checkboxes y botones de edición inline -->
+      </ul>
+    </div>
+
+    <!-- Añadir nuevo item -->
+    <div class="pt-3 border-t border-slate-800">
+      <form onsubmit="submitQuickChecklistItem(event)" class="flex gap-2">
+        <input type="text" id="quickNewItemInput" required placeholder="Añadir nuevo micro-objetivo..."
+          class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition-all">
+          Agregar
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: CONFIRMACIÓN DE ELIMINACIÓN         -->
+<!-- ========================================== -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200 text-center">
+    <div class="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+      <i data-lucide="trash-2" class="w-6 h-6"></i>
+    </div>
+    <h3 id="deleteModalTitle" class="text-base font-bold text-white mb-1.5">¿Eliminar elemento?</h3>
+    <p id="deleteModalMessage" class="text-xs text-slate-400 mb-6">Esta acción es irreversible y eliminará todos sus micro-objetivos asociados.</p>
+
+    <div class="flex items-center justify-center gap-3">
+      <button type="button" onclick="closeModal('deleteModal')"
+        class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all">
+        Cancelar
+      </button>
+      <button type="button" id="confirmDeleteBtn"
+        class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-rose-600/30 transition-all">
+        Sí, Eliminar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Contenedor global de Toasts -->
+<div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none"></div>

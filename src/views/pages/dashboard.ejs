@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Focus & Habits</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body class="h-full bg-slate-950 text-slate-100 font-sans antialiased flex selection:bg-indigo-500 selection:text-white">
+  
+  <%- include('../partials/sidebar') %>
+
+  <div class="flex-1 flex flex-col min-w-0 lg:pl-64 min-h-screen">
+    <%- include('../partials/header') %>
+
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      
+      <!-- Banner de Bienvenida -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-slate-900 border border-indigo-500/20 p-6 sm:p-8 shadow-2xl">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold mb-3 border border-indigo-500/30">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Dashboard de Hábitos & Tareas 2026</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              ¡Hola, <%= currentUser ? currentUser.name : 'Usuario' %>! 👋
+            </h2>
+            <p class="text-slate-300 text-sm mt-1.5 max-w-xl">
+              Aquí está tu resumen de hoy. Mantén tus hábitos al día y completa tus micro-objetivos para elevar tu productividad.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <button onclick="openHabitModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Nuevo Hábito</span>
+            </button>
+            <button onclick="openTaskModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Nueva Tarea</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjetas de Métricas Principales -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Tarjeta 1: Hábitos Hoy -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hábitos de Hoy</span>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="flame" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-black text-white"><%= stats.completedHabitsToday %></span>
+            <span class="text-xs text-slate-400">/ <%= stats.totalHabits %> completados</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden">
+            <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: <%= stats.habitsCompletionPct %>%"></div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2: Mejor Racha Activa -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Racha Máxima</span>
+            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-black text-white"><%= stats.maxCurrentStreak %></span>
+            <span class="text-xs text-slate-400">días consecutivos</span>
+          </div>
+          <p class="text-[11px] text-amber-400/90 mt-3 font-medium">🔥 ¡La constancia es la clave!</p>
+        </div>
+
+        <!-- Tarjeta 3: Tareas Completadas -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Progreso Tareas</span>
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-black text-white"><%= stats.completedTasks %></span>
+            <span class="text-xs text-slate-400">/ <%= stats.totalTasks %> tareas</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden">
+            <div class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: <%= stats.tasksCompletionPct %>%"></div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 4: Micro-Objetivos / Checklists -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Micro-Objetivos</span>
+            <div class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+              <i data-lucide="list-checks" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="text-2xl font-black text-white"><%= stats.completedMicroGoals %></span>
+            <span class="text-xs text-slate-400">/ <%= stats.totalMicroGoals %> sub-metas</span>
+          </div>
+          <p class="text-[11px] text-purple-400 mt-3 font-medium">✨ Checklists activos</p>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: HÁBITOS DE HOY -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-2 h-6 bg-emerald-500 rounded-full"></div>
+            <h3 class="text-lg font-bold text-white tracking-tight">Hábitos de Hoy</h3>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700"><%= habits.length %></span>
+          </div>
+          <a href="/habits" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+            <span>Ver todos los hábitos</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+        <% if (habits.length === 0) { %>
+          <div class="text-center py-10 bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl p-6">
+            <i data-lucide="flame" class="w-10 h-10 text-slate-600 mx-auto mb-3"></i>
+            <h4 class="text-sm font-semibold text-slate-300">No tienes hábitos registrados</h4>
+            <p class="text-xs text-slate-500 mt-1 mb-4">Comienza registrando un hábito para hacerle seguimiento diario.</p>
+            <button onclick="openHabitModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl">
+              Crear mi primer hábito
+            </button>
+          </div>
+        <% } else { %>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% habits.forEach(habit => { %>
+              <div class="habit-card bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-5 shadow-lg transition-all duration-200 flex flex-col justify-between" id="habit-card-<%= habit.id %>">
+                <div>
+                  <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background-color: <%= habit.color %>20; color: <%= habit.color %>; border: 1px solid <%= habit.color %>40">
+                        <i data-lucide="<%= habit.icon || 'flame' %>" class="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <h4 class="text-sm font-bold text-white tracking-tight"><%= habit.title %></h4>
+                        <% if (habit.category_name) { %>
+                          <span class="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-0.5" style="background-color: <%= habit.category_color %>20; color: <%= habit.category_color %>">
+                            <%= habit.category_name %>
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+
+                    <!-- Botón de Toggle Hábito Diario -->
+                    <button onclick="toggleHabitLog(<%= habit.id %>)" 
+                      id="habit-toggle-btn-<%= habit.id %>"
+                      class="habit-check-btn w-9 h-9 rounded-xl flex items-center justify-center transition-all <%= habit.completedToday ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700' %>">
+                      <i data-lucide="check" class="w-5 h-5"></i>
+                    </button>
+                  </div>
+
+                  <% if (habit.description) { %>
+                    <p class="text-xs text-slate-400 line-clamp-2 mb-3"><%= habit.description %></p>
+                  <% } %>
+
+                  <!-- Resumen de Micro-Objetivos (Checklist) -->
+                  <div class="mt-3 pt-3 border-t border-slate-800/80">
+                    <div class="flex items-center justify-between text-[11px] mb-1.5">
+                      <button onclick="openQuickChecklistModal('habit', <%= habit.id %>, '<%= habit.title %>')" class="text-slate-400 hover:text-indigo-400 font-medium flex items-center gap-1">
+                        <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
+                        <span>Micro-Objetivos (<%= habit.checklist.completed %>/<%= habit.checklist.total %>)</span>
+                      </button>
+                      <span class="font-bold text-slate-300"><%= habit.checklist.percentage %>%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full transition-all duration-300" style="width: <%= habit.checklist.percentage %>%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer del Hábito: Racha y Acciones -->
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-1.5 text-amber-400 font-semibold text-xs">
+                    <i data-lucide="flame" class="w-4 h-4 fill-amber-400/20"></i>
+                    <span><%= habit.streak %> días de racha</span>
+                  </div>
+
+                  <div class="flex items-center gap-1">
+                    <button onclick="editHabit(<%= habit.id %>)" title="Editar Hábito" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                      <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="confirmDelete('habit', <%= habit.id %>, '<%= habit.title %>')" title="Eliminar Hábito" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <!-- SECCIÓN: TAREAS ACTIVAS / RECIENTES -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-2 h-6 bg-indigo-500 rounded-full"></div>
+            <h3 class="text-lg font-bold text-white tracking-tight">Tareas Prioritarias</h3>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700"><%= tasks.length %></span>
+          </div>
+          <a href="/tasks" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+            <span>Ir al tablero de tareas</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+
+        <% if (tasks.length === 0) { %>
+          <div class="text-center py-10 bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl p-6">
+            <i data-lucide="check-square" class="w-10 h-10 text-slate-600 mx-auto mb-3"></i>
+            <h4 class="text-sm font-semibold text-slate-300">No tienes tareas pendientes</h4>
+            <p class="text-xs text-slate-500 mt-1 mb-4">Crea una nueva tarea con micro-objetivos para organizarte.</p>
+            <button onclick="openTaskModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl">
+              Crear mi primera tarea
+            </button>
+          </div>
+        <% } else { %>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% tasks.forEach(task => { %>
+              <div class="task-card bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-5 shadow-lg transition-all duration-200 flex flex-col justify-between" id="task-card-<%= task.id %>">
+                <div>
+                  <div class="flex items-start justify-between gap-3 mb-2.5">
+                    <div class="flex items-center gap-2">
+                      <!-- Badge de Prioridad -->
+                      <% if (task.priority === 'high') { %>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30">🔴 Alta</span>
+                      <% } else if (task.priority === 'medium') { %>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">🟡 Media</span>
+                      <% } else { %>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🟢 Baja</span>
+                      <% } %>
+
+                      <!-- Badge de Estado -->
+                      <% if (task.status === 'completed') { %>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400">Completada</span>
+                      <% } else if (task.status === 'in_progress') { %>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-400">En progreso</span>
+                      <% } else { %>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-800 text-slate-400">Pendiente</span>
+                      <% } %>
+                    </div>
+
+                    <div class="flex items-center gap-1">
+                      <button onclick="editTask(<%= task.id %>)" title="Editar Tarea" class="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                      </button>
+                      <button onclick="confirmDelete('task', <%= task.id %>, '<%= task.title %>')" title="Eliminar Tarea" class="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <h4 class="text-sm font-bold text-white tracking-tight mb-1 <%= task.status === 'completed' ? 'line-through text-slate-400' : '' %>">
+                    <%= task.title %>
+                  </h4>
+
+                  <% if (task.description) { %>
+                    <p class="text-xs text-slate-400 line-clamp-2 mb-3"><%= task.description %></p>
+                  <% } %>
+
+                  <!-- Resumen de Micro-Objetivos (Checklist) -->
+                  <div class="mt-3 pt-3 border-t border-slate-800/80">
+                    <div class="flex items-center justify-between text-[11px] mb-1.5">
+                      <button onclick="openQuickChecklistModal('task', <%= task.id %>, '<%= task.title %>')" class="text-slate-400 hover:text-indigo-400 font-medium flex items-center gap-1">
+                        <i data-lucide="list-checks" class="w-3.5 h-3.5"></i>
+                        <span>Micro-Objetivos (<%= task.checklist.completed %>/<%= task.checklist.total %>)</span>
+                      </button>
+                      <span class="font-bold text-indigo-400"><%= task.checklist.percentage %>%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div class="h-full bg-indigo-500 rounded-full transition-all duration-300" style="width: <%= task.checklist.percentage %>%"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer Tarea: Fecha y Selector Rápido de Estado -->
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                    <span><%= task.due_date ? task.due_date : 'Sin fecha' %></span>
+                  </div>
+
+                  <select onchange="updateTaskStatusQuick(<%= task.id %>, this.value)" class="bg-slate-800 border border-slate-700 text-[11px] text-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-500">
+                    <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>⏳ Pendiente</option>
+                    <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>⚡ En progreso</option>
+                    <option value="completed" <%= task.status === 'completed' ? 'selected' : '' %>>✅ Hecho</option>
+                  </select>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+    </main>
+
+    <footer class="py-4 px-6 text-center text-xs text-slate-500 border-t border-slate-900">
+      Focus & Habits 2026 • Arquitectura MVC con SQLite y Micro-Objetivos Dinámicos
+    </footer>
+  </div>
+
+  <%- include('../partials/modals') %>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

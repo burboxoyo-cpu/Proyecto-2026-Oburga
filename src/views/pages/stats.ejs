@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Focus & Habits</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body class="h-full bg-slate-950 text-slate-100 font-sans antialiased flex selection:bg-indigo-500 selection:text-white">
+  
+  <%- include('../partials/sidebar') %>
+
+  <div class="flex-1 flex flex-col min-w-0 lg:pl-64 min-h-screen">
+    <%- include('../partials/header') %>
+
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+      
+      <!-- Encabezado de Página -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-white tracking-tight">Estadísticas y Analítica</h2>
+          <p class="text-slate-400 text-xs mt-1">Métricas de constancia, finalización de tareas y rendimiento general</p>
+        </div>
+      </div>
+
+      <!-- Resumen Numérico Rápido -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Hábitos Activos</span>
+            <i data-lucide="flame" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <p class="text-3xl font-extrabold text-white"><%= habits.length %></p>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Total Tareas</span>
+            <i data-lucide="check-square" class="w-4 h-4 text-indigo-400"></i>
+          </div>
+          <p class="text-3xl font-extrabold text-white"><%= tasks.length %></p>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Categorías</span>
+            <i data-lucide="folder" class="w-4 h-4 text-purple-400"></i>
+          </div>
+          <p class="text-3xl font-extrabold text-white"><%= categories.length %></p>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Mayor Racha</span>
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <p class="text-3xl font-extrabold text-amber-400">
+            <%= habits.length > 0 ? Math.max(...habits.map(h => h.longestStreak), 0) : 0 %> <span class="text-xs text-slate-400 font-normal">días</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Gráficos con Chart.js -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Gráfico 1: Estado de las Tareas -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-400"></i>
+            <span>Distribución de Tareas por Estado</span>
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="tasksStatusChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico 2: Tareas por Prioridad -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
+            <span>Tareas por Nivel de Prioridad</span>
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="tasksPriorityChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfico 3: Hábitos por Categoría -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl lg:col-span-2">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+            <span>Hábitos Registrados por Categoría</span>
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="habitsCategoryChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabla de Ranking de Rachas de Hábitos -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+          <span>Tabla de Constancia y Rachas</span>
+        </h3>
+
+        <% if (habits.length === 0) { %>
+          <p class="text-xs text-slate-500 text-center py-4">No hay datos de hábitos suficientes para generar el ranking.</p>
+        <% } else { %>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 uppercase tracking-wider border-b border-slate-800 bg-slate-950/40">
+                <tr>
+                  <th class="p-3">Hábito</th>
+                  <th class="p-3">Categoría</th>
+                  <th class="p-3">Racha Actual</th>
+                  <th class="p-3">Mejor Racha</th>
+                  <th class="p-3">Micro-Objetivos</th>
+                  <th class="p-3">Hoy</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+                <% habits.sort((a, b) => b.streak - a.streak).forEach(h => { %>
+                  <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 font-semibold text-white flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full" style="background-color: <%= h.color %>"></span>
+                      <span><%= h.title %></span>
+                    </td>
+                    <td class="p-3 text-slate-400"><%= h.category_name || 'Sin Categoría' %></td>
+                    <td class="p-3">
+                      <span class="font-bold text-amber-400 flex items-center gap-1">
+                        <i data-lucide="flame" class="w-3.5 h-3.5 fill-amber-400/20"></i>
+                        <span><%= h.streak %> días</span>
+                      </span>
+                    </td>
+                    <td class="p-3 font-medium text-slate-300"><%= h.longestStreak %> días</td>
+                    <td class="p-3">
+                      <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">
+                        <%= h.checklist.completed %> / <%= h.checklist.total %> (<%= h.checklist.percentage %>%)
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <% if (h.completedToday) { %>
+                        <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                          <i data-lucide="check" class="w-3.5 h-3.5"></i> Completado
+                        </span>
+                      <% } else { %>
+                        <span class="text-slate-500">Pendiente</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+
+    </main>
+
+    <footer class="py-4 px-6 text-center text-xs text-slate-500 border-t border-slate-900">
+      Focus & Habits 2026 • Arquitectura MVC con SQLite
+    </footer>
+  </div>
+
+  <%- include('../partials/modals') %>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/stats.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "habitos-tareas-mvc",
+  "version": "1.0.0",
+  "description": "Web App MVC moderna para registro de hábitos, tareas y checklists de micro-objetivos con SQLite",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/config/seed.js"
+  },
+  "keywords": [
+    "habits",
+    "tasks",
+    "checklist",
+    "mvc",
+    "sqlite",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

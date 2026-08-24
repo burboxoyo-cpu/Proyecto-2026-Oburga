@@ -1,0 +1,23 @@
+<header class="h-16 bg-slate-900/60 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+  <div class="flex items-center gap-3">
+    <button id="openSidebarBtn" class="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+      <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+    <h1 class="text-lg font-bold text-white tracking-tight"><%= title %></h1>
+  </div>
+
+  <div class="flex items-center gap-2 sm:gap-3">
+    <!-- Quick Add Menu / Buttons -->
+    <button onclick="openHabitModal()" 
+      class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-semibold transition-all">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      <span>Hábito</span>
+    </button>
+
+    <button onclick="openTaskModal()" 
+      class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      <span>Nueva Tarea</span>
+    </button>
+  </div>
+</header>
